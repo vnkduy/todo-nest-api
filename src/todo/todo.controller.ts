@@ -8,18 +8,20 @@ import {
   Post,
 } from '@nestjs/common';
 import { Todo } from '@prisma/client';
-import { createTodoDto } from './dtos/create.dto';
+import { CreateTodoDto } from './dtos/create.dto';
 import { ParamTodoIdDto } from './dtos/param.dto';
-import { updateTodoDto } from './dtos/update.dto';
+import { UpdateTodoDto } from './dtos/update.dto';
 import { TodoService } from './todo.service';
+import { GetUser } from 'src/auth/decorators/get-user.decorator';
 
 @Controller('todos')
 export class TodoController {
   constructor(private readonly todoService: TodoService) {}
 
   @Post('')
-  createTodo(@Body() body: createTodoDto): Promise<string> {
-    return this.todoService.createTodo(body);
+  createTodo(@Body() body: CreateTodoDto, @GetUser() user): Promise<string> {
+    console.log('🚀 ~ TodoController ~ user:', user);
+    return this.todoService.createTodo(body, user);
   }
 
   @Get('')
@@ -35,14 +37,13 @@ export class TodoController {
   @Patch(':id')
   updateTodo(
     @Param() params: ParamTodoIdDto,
-    @Body() body: updateTodoDto,
+    @Body() body: UpdateTodoDto,
   ): Promise<string> {
-    console.log('🚀 ~ TodoController ~ params:', params);
     return this.todoService.updateTodo(params.id, body);
   }
 
   @Delete(':id')
-  deleteTodo(@Param() params: ParamTodoIdDto): Promise<string> {
+  deleteTodo(@Param() params: ParamTodoIdDto): Promise<void> {
     return this.todoService.deleteTodo(params.id);
   }
 }

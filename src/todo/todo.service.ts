@@ -1,42 +1,37 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Todo } from '@prisma/client';
 import { PrismaService } from 'src/prisma.service';
-import { createTodoDto } from './dtos/create.dto';
-import { updateTodoDto } from './dtos/update.dto';
+import { CreateTodoDto } from './dtos/create.dto';
+import { UpdateTodoDto } from './dtos/update.dto';
 
 @Injectable()
 export class TodoService {
   constructor(private primaService: PrismaService) {}
 
-  createTodo = async (todoData: createTodoDto): Promise<string> => {
-    const todo = await this.primaService.todo.findUnique({
-      where: {
-        title: todoData.title,
-      },
-    });
-
-    if (todo) {
-      throw new HttpException(
-        {
-          message: 'This title has been used',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+  async createTodo(
+    todoData: CreateTodoDto,
+    { id, email }: { id: string; email: string },
+  ): Promise<string> {
+    console.log('🚀 ~ TodoService ~ { id, email }::', { id, email });
+    try {
+      const res = await this.primaService.todo.create({
+        data: todoData,
+      });
+      return res.id;
+    } catch (error) {
+      throw new BadRequestException();
     }
-
-    const res = await this.primaService.todo.create({
-      data: todoData,
-    });
-
-    return res.id;
-  };
+  }
 
   getAllTodo = async (): Promise<Todo[]> => {
-    const todo = await this.primaService.todo.findMany();
-    return todo;
+    return await this.primaService.todo.findMany();
   };
 
-  getTodoById = async (id: string): Promise<Todo> => {
+  async getTodoById(id: string): Promise<Todo> {
     const todo = await this.primaService.todo.findUnique({
       where: {
         id,
@@ -44,53 +39,40 @@ export class TodoService {
     });
 
     if (!todo) {
-      throw new HttpException(
-        {
-          message: 'Todo not found',
-        },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new NotFoundException();
     }
     return todo;
-  };
+  }
 
-  updateTodo = async (
+  async updateTodo(
     id: string,
-    { completed, title }: updateTodoDto,
-  ): Promise<string> => {
-    const todo = await this.primaService.todo.findUnique({
-      where: {
-        title,
-      },
-    });
-
-    if (todo) {
-      throw new HttpException(
-        {
-          message: 'This title has been used',
+    { completed, title }: UpdateTodoDto,
+  ): Promise<string> {
+    try {
+      const res = await this.primaService.todo.update({
+        where: {
+          id,
         },
-        HttpStatus.BAD_REQUEST,
-      );
+        data: {
+          title,
+          completed,
+        },
+      });
+      return res.id;
+    } catch (error) {
+      throw new Error();
     }
+  }
 
-    const res = await this.primaService.todo.update({
-      where: {
-        id,
-      },
-      data: {
-        title,
-        completed,
-      },
-    });
-    return res.id;
-  };
-
-  deleteTodo = async (id: string): Promise<string> => {
-    const todo = await this.primaService.todo.delete({
-      where: {
-        id,
-      },
-    });
-    return todo.id;
-  };
+  async deleteTodo(id: string): Promise<void> {
+    try {
+      await this.primaService.todo.delete({
+        where: {
+          id,
+        },
+      });
+    } catch (error) {
+      throw new Error();
+    }
+  }
 }
