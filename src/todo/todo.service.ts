@@ -12,12 +12,15 @@ import { UpdateTodoDto } from './dtos/update.dto';
 export class TodoService {
   constructor(private primaService: PrismaService) {}
 
-  async createTodo(todoData: CreateTodoDto): Promise<string> {
+  async createTodo(
+    todoData: CreateTodoDto,
+    { id, email }: { id: string; email: string },
+  ): Promise<string> {
+    console.log('🚀 ~ TodoService ~ { id, email }::', { id, email });
     try {
       const res = await this.primaService.todo.create({
         data: todoData,
       });
-
       return res.id;
     } catch (error) {
       throw new BadRequestException();

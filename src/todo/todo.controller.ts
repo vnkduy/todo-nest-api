@@ -12,14 +12,16 @@ import { CreateTodoDto } from './dtos/create.dto';
 import { ParamTodoIdDto } from './dtos/param.dto';
 import { UpdateTodoDto } from './dtos/update.dto';
 import { TodoService } from './todo.service';
+import { GetUser } from 'src/auth/decorators/get-user.decorator';
 
 @Controller('todos')
 export class TodoController {
   constructor(private readonly todoService: TodoService) {}
 
   @Post('')
-  createTodo(@Body() body: CreateTodoDto): Promise<string> {
-    return this.todoService.createTodo(body);
+  createTodo(@Body() body: CreateTodoDto, @GetUser() user): Promise<string> {
+    console.log('🚀 ~ TodoController ~ user:', user);
+    return this.todoService.createTodo(body, user);
   }
 
   @Get('')
